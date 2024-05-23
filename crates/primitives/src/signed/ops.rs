@@ -879,11 +879,11 @@ impl<const BITS: usize, const LIMBS: usize> cmp::Ord for Signed<BITS, LIMBS> {
         use cmp::Ordering::*;
         use Sign::*;
 
-        match (self.into_sign_and_abs(), other.into_sign_and_abs()) {
-            ((Positive, _), (Negative, _)) => Greater,
-            ((Negative, _), (Positive, _)) => Less,
-            ((Positive, this), (Positive, other)) => this.cmp(&other),
-            ((Negative, this), (Negative, other)) => other.cmp(&this),
+        match (self.sign(), other.sign()) {
+            (Positive, Negative) => Greater,
+            (Negative, Positive) => Less,
+            (Positive, Positive) => self.0.cmp(&other.0),
+            (Negative, Negative) => other.0.cmp(&self.0),
         }
     }
 }
