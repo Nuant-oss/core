@@ -1,7 +1,7 @@
 use super::{utils::*, ParseSignedError, Sign};
 use alloc::string::String;
 use core::fmt;
-use ruint::{BaseConvertError, Uint};
+use ruint::{BaseConvertError, Uint, UintTryFrom, UintTryTo};
 
 /// Signed integer wrapping a `ruint::Uint`.
 ///
@@ -152,6 +152,43 @@ impl<const BITS: usize, const LIMBS: usize> Signed<BITS, LIMBS> {
         <T as TryInto<Self>>::Error: fmt::Debug,
     {
         val.try_into().unwrap()
+    }
+
+    /// Construct a new [`Uint`] from the value.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the conversion fails, for example if the value is too large
+    /// for the bit-size of the [`Uint`]. The panic will be attributed to the
+    /// call site.
+    ///
+    #[inline]
+    #[must_use]
+    #[track_caller]
+    pub fn from<T>(value: T) -> Self
+        where
+            Self: UintTryFrom<T>,
+    {
+        match Self::uint_try_from(value) {
+            Ok(n) => n,
+            Err(e) => panic!("Uint conversion error: {e}"),
+        }
+    }
+
+    /// # Panics
+    ///
+    /// Panics if the conversion fails, for example if the value is too large
+    /// for the bit-size of the target type.
+    ///
+    #[inline]
+    #[must_use]
+    #[track_caller]
+    pub fn to<T>(&self) -> T
+        where
+            Self: UintTryTo<T>,
+            T: fmt::Debug,
+    {
+        self.uint_try_to().expect("Uint conversion error")
     }
 
     /// Shortcut for `self.try_into().unwrap()`.
