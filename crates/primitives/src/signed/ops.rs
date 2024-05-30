@@ -882,8 +882,7 @@ impl<const BITS: usize, const LIMBS: usize> cmp::Ord for Signed<BITS, LIMBS> {
         match (self.sign(), other.sign()) {
             (Positive, Negative) => Greater,
             (Negative, Positive) => Less,
-            (Positive, Positive) => self.0.cmp(&other.0),
-            (Negative, Negative) => other.0.cmp(&self.0),
+            _ => self.0.cmp(&other.0),
         }
     }
 }
