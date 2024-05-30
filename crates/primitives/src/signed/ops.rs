@@ -839,7 +839,7 @@ macro_rules! impl_shift {
 
                 #[inline]
                 fn shr(self, rhs: $t) -> Self::Output {
-                    self.wrapping_shr(rhs as usize)
+                    self.asr(rhs as usize)
                 }
             }
 
