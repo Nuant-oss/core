@@ -1729,6 +1729,5 @@ mod tests {
         // out-of-bounds conversions
         assert!(I24::uint_try_from(I128::MIN).is_err());
         assert!(I24::uint_try_from(I128::MAX).is_err());
-
     }
 }

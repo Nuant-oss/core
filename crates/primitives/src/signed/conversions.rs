@@ -29,45 +29,56 @@ impl<const BITS: usize, const LIMBS: usize> TryFrom<Signed<BITS, LIMBS>> for Uin
 }
 
 /// Conversion between `Signed` of different `BITS` or `LIMBS` length.
-impl<const BITS: usize, const LIMBS: usize, const BITS_SRC: usize, const LIMBS_SRC: usize> UintTryFrom<Signed<BITS_SRC, LIMBS_SRC>> for Signed<BITS, LIMBS> {
+impl<const BITS: usize, const LIMBS: usize, const BITS_SRC: usize, const LIMBS_SRC: usize>
+    UintTryFrom<Signed<BITS_SRC, LIMBS_SRC>> for Signed<BITS, LIMBS>
+{
     #[inline]
     fn uint_try_from(value: Signed<BITS_SRC, LIMBS_SRC>) -> Result<Self, ToUintError<Self>> {
         let (sign, abs) = value.into_sign_and_abs();
         let resized = Self::from_raw(Uint::<BITS, LIMBS>::uint_try_from(abs).map_err(signed_err)?);
         if resized.is_negative() {
-            return Err(ToUintError::ValueNegative(BITS, resized))
+            return Err(ToUintError::ValueNegative(BITS, resized));
         }
         Ok(match sign {
-            Sign::Negative => resized.checked_neg().ok_or(ToUintError::ValueTooLarge(BITS, resized))?,
-            Sign::Positive => resized
+            Sign::Negative => {
+                resized.checked_neg().ok_or(ToUintError::ValueTooLarge(BITS, resized))?
+            }
+            Sign::Positive => resized,
         })
     }
 }
 
 /// Conversion from positive `Signed` to `Uint` of different `BITS` or `LIMBS` length.
-impl<const BITS: usize, const LIMBS: usize, const BITS_SRC: usize, const LIMBS_SRC: usize> UintTryFrom<Signed<BITS_SRC, LIMBS_SRC>> for Uint<BITS, LIMBS> {
+impl<const BITS: usize, const LIMBS: usize, const BITS_SRC: usize, const LIMBS_SRC: usize>
+    UintTryFrom<Signed<BITS_SRC, LIMBS_SRC>> for Uint<BITS, LIMBS>
+{
     #[inline]
     fn uint_try_from(value: Signed<BITS_SRC, LIMBS_SRC>) -> Result<Self, ToUintError<Self>> {
         if value.is_negative() {
-            return Err(ToUintError::ValueNegative(BITS, Uint::uint_try_from(value.into_raw())?))
+            return Err(ToUintError::ValueNegative(BITS, Self::uint_try_from(value.into_raw())?));
         }
-        Uint::uint_try_from(value.into_raw())
+        Self::uint_try_from(value.into_raw())
     }
 }
 
 /// Conversion from `Uint` to positive `Signed` of different `BITS` or `LIMBS` length.
-impl<const BITS: usize, const LIMBS: usize, const BITS_SRC: usize, const LIMBS_SRC: usize> UintTryFrom<Uint<BITS_SRC, LIMBS_SRC>> for Signed<BITS, LIMBS> {
+impl<const BITS: usize, const LIMBS: usize, const BITS_SRC: usize, const LIMBS_SRC: usize>
+    UintTryFrom<Uint<BITS_SRC, LIMBS_SRC>> for Signed<BITS, LIMBS>
+{
     #[inline]
     fn uint_try_from(value: Uint<BITS_SRC, LIMBS_SRC>) -> Result<Self, ToUintError<Self>> {
-        let resized = Self::from_raw(Uint::<BITS, LIMBS>::uint_try_from(value).map_err(signed_err)?);
+        let resized =
+            Self::from_raw(Uint::<BITS, LIMBS>::uint_try_from(value).map_err(signed_err)?);
         if resized.is_negative() {
-            return Err(ToUintError::ValueNegative(BITS, resized))
+            return Err(ToUintError::ValueNegative(BITS, resized));
         }
         Ok(resized)
     }
 }
 
-fn signed_err<const BITS: usize, const LIMBS: usize>(err: ToUintError<Uint<BITS, LIMBS>>) -> ToUintError<Signed<BITS, LIMBS>> {
+fn signed_err<const BITS: usize, const LIMBS: usize>(
+    err: ToUintError<Uint<BITS, LIMBS>>,
+) -> ToUintError<Signed<BITS, LIMBS>> {
     match err {
         ToUintError::ValueTooLarge(b, t) => ToUintError::ValueTooLarge(b, Signed(t)),
         ToUintError::ValueNegative(b, t) => ToUintError::ValueNegative(b, Signed(t)),
